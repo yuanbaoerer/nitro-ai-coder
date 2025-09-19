@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: nitro-ai-coder-backend
+
+server:
+  port: 8123
+  servlet:
+    context-path: /api
