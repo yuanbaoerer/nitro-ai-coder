@@ -6,3 +6,16 @@ server:
   port: 8123
   servlet:
     context-path: /api
+
+# springdoc-openapi
+springdoc:
+  group-configs:
+    -group: 'default'
+#    指定扫描 Controller 包的路径
+    package-to-scan: org.example.nitroaicoder.controller
+
+# knife4j
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
