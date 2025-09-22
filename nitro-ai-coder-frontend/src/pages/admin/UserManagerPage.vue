@@ -36,15 +36,42 @@
           {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-button danger @click="doDelete(record.id)">删除</a-button>
+          <a-button @click="doUpdate(record)">更新</a-button>
+          <a-button danger style="margin-left: 8px" @click="doDelete(record.id)">删除</a-button>
         </template>
       </template>
     </a-table>
+    <!-- 更新用户信息模态框 -->
+    <a-modal
+      v-model:visible="updateModalVisible"
+      title="更新用户信息"
+      ok-text="保存"
+      cancel-text="取消"
+      @ok="handleUpdateOk"
+    >
+      <a-form layout="vertical" :model="updateForm" ref="updateFormRef">
+        <a-form-item label="用户名" name="userName">
+          <a-input v-model:value="updateForm.userName" placeholder="请输入用户名" />
+        </a-form-item>
+        <a-form-item label="头像" name="userAvatar">
+          <a-input v-model:value="updateForm.userAvatar" placeholder="请输入头像URL" />
+        </a-form-item>
+        <a-form-item label="简介" name="userProfile">
+          <a-textarea v-model:value="updateForm.userProfile" placeholder="请输入用户简介" />
+        </a-form-item>
+        <a-form-item label="用户角色" name="userRole">
+          <a-select v-model:value="updateForm.userRole" placeholder="请选择用户角色">
+            <a-select-option value="admin">管理员</a-select-option>
+            <a-select-option value="user">普通用户</a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { deleteUser, listUserVoByPage } from '@/api/userController.ts'
+import { deleteUser, listUserVoByPage, updateUser } from '@/api/userController.ts'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 
@@ -91,6 +118,17 @@ const total = ref(0)
 const searchParams = reactive<API.UserQueryRequest>({
   pageNum: 1,
   pageSize: 10,
+})
+
+// 更新表单相关
+const updateModalVisible = ref(false)
+const updateFormRef = ref<any>(null)
+const updateForm = reactive<API.UserUpdateRequest>({
+  id: undefined,
+  userName: '',
+  userAvatar: '',
+  userProfile: '',
+  userRole: 'user',
 })
 
 // 获取数据
@@ -143,6 +181,42 @@ const doDelete = async (id: string) => {
     fetchData()
   } else {
     message.error('删除失败')
+  }
+}
+
+// 打开更新模态框
+const doUpdate = (record: API.UserVO) => {
+  // 填充表单数据
+  updateForm.id = record.id
+  updateForm.userName = record.userName || ''
+  updateForm.userAvatar = record.userAvatar || ''
+  updateForm.userProfile = record.userProfile || ''
+  updateForm.userRole = record.userRole || 'user'
+  // 显示模态框
+  updateModalVisible.value = true
+}
+
+// 处理更新保存
+const handleUpdateOk = async () => {
+  try {
+    // 验证表单
+    if (updateFormRef.value) {
+      await updateFormRef.value.validate()
+    }
+    // 调用更新接口
+    const res = await updateUser(updateForm)
+    if (res.data.code === 0 && res.data.data) {
+      message.success('更新成功')
+      // 关闭模态框
+      updateModalVisible.value = false
+      // 刷新数据
+      fetchData()
+    } else {
+      message.error('更新失败：' + (res.data.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('更新用户信息失败', error)
+    message.error('更新失败，请检查输入数据')
   }
 }
 
