@@ -5,7 +5,7 @@
       <div class="logo-section">
         <img src="/src/assets/leijun.png" alt="Logo" class="logo" />
         <span class="site-title">Nitro AI Coder</span>
-        
+
         <!-- 菜单区域 -->
         <a-menu
           v-model:selectedKeys="selectedKeys"
@@ -17,11 +17,28 @@
       </div>
 
       <!-- 用户区域 -->
-      <div class="user-section">
-        <a-button type="primary" @click="handleLogin">
-          登录
-        </a-button>
+      <div class="user-login-status">
+        <div v-if="loginUserStore.loginUser.id">
+          <a-dropdown>
+            <a-space>
+              <a-avatar :src="loginUserStore.loginUser.userAvatar" />
+              {{ loginUserStore.loginUser.userName ?? '无名' }}
+            </a-space>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item @click="doLogout">
+                  <LogoutOutlined />
+                  退出登录
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
+        <div v-else>
+          <a-button type="primary" href="/user/login">登录</a-button>
+        </div>
       </div>
+
     </div>
   </a-layout-header>
 </template>
@@ -29,7 +46,30 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import type { MenuProps } from 'ant-design-vue'
+import { type MenuProps, message } from 'ant-design-vue'
+// JS 中引入 Store
+import { useLoginUserStore } from '@/stores/loginUser.ts'
+const loginUserStore = useLoginUserStore()
+
+// HTML 展示数据
+{{ JSON.stringify(loginUserStore.loginUser) }}
+
+import { LogoutOutlined } from '@ant-design/icons-vue'
+import { userLogout } from '@/api/userController.ts'
+
+// 用户注销
+const doLogout = async () => {
+  const res = await userLogout()
+  if (res.data.code === 0) {
+    loginUserStore.setLoginUser({
+      userName: '未登录',
+    })
+    message.success('退出登录成功')
+    await router.push('/user/login')
+  } else {
+    message.error('退出登录失败，' + res.data.message)
+  }
+}
 
 const router = useRouter()
 // 当前选中菜单
@@ -124,15 +164,15 @@ const handleLogin = () => {
   .header-content {
     padding: 0 16px;
   }
-  
+
   .site-title {
     display: none;
   }
-  
+
   .header-menu {
     display: none;
   }
-  
+
   .logo-section {
     gap: 12px;
   }
