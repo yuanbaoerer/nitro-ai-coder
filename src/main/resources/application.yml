@@ -1,4 +1,7 @@
 spring:
+  profiles:
+#   激活 application-local.yml
+    active: local
   application:
     name: nitro-ai-coder-backend
 #    mysql
@@ -7,6 +10,16 @@ spring:
     url: jdbc:mysql://localhost:3306/nitro_ai_coder
     username: root
     password: 123456
+
+# 添加ai 配置
+langchain4j:
+  open-ai:
+    chat-model:
+#      最大响应长度
+      max-tokens: 8192
+#      json output
+      strict-json-schema: true
+      response-format: json_object
 
 server:
   port: 8123
